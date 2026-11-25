@@ -5,40 +5,40 @@
 #include <vector>
 #include <cstddef>
 
-// Structure le la preuve de proximite
+// Estructura de la prueba de proximidad
 struct ProximityProof {
     FieldElement rho; 
     Uni_Poly h_X; // = psi(X,rho)
     struct  RowOpen {
-        // au moins t+1 indices reveles
+        // Al menos t+1 índices abiertos
         std::vector<size_t> indices; 
-        // valeurs de psi correspondantes
+        // Valores correspondientes de psi
         std::vector<FieldElement> evals; 
-        // leurs chemins
+        // Sus rutas Merkle
         std::vector<MerklePath> paths;   
     };
-    // Ouverture pour chaque P_i
+    // Aperturas para cada P_i
     std::vector< RowOpen> openings; 
 };
 
 
 /*
- * Rend l'IOPP non-interactive avec Fiat-Shamir : 
- * D cree son propre defi rho en hachant ses propres 
- * engagements publics. 
- * S'il modifie son polynome secret pour tricher, le hache
- * change, rho aussi, et la triche est demasquee.
+ * Hace que la prueba IOPP sea no interactiva mediante Fiat–Shamir: 
+ * El Dealer calcula rho aplicando hash a sus propios 
+ * compromisos públicos. 
+ * Si modifica el polinomio secreto para hacer trampa, cambia el hash,
+ * y con él cambia rho; así se detecta el intento de fraude.
  */
 FieldElement fiat_shamir_rho(
-    // racine de psi dans MerkleTree
+    // Raíz del árbol Merkle de psi
     const Commitment& c_psi,
-    // racine de psi(x_i,Y)
+    // Raíz del árbol Merkle de psi(x_i,Y)
     const std::vector<Commitment>& c_psi_Y
 );
 
-/* Prouve que deg(psi(X,Y)) <= t en calculant h_X = psi(X,rho)
- * Ouvre au moins t+1 cases du MerkleTree et fournit leurs
- * chemins jusqu'aux racines c_psi_Y pour chaque P_i.
+/* Demuestra que el grado de psi(X,Y) es <= t calculando h_X = psi(X,rho).
+ * Abre al menos t+1 posiciones del árbol Merkle y proporciona sus
+ * rutas hasta la raíz c_psi_Y correspondiente a cada P_i.
  */
 ProximityProof prove_prox(
     const BivPoly& psi,
@@ -50,10 +50,10 @@ ProximityProof prove_prox(
 );
 
 /*
- * Fonction pour la verification de la validite des shares en 
- * verifiant la preuve de proximite reçue.
- * Les P_i : Valident le calcul de Fiat-Shamir, contrôlent le degre de 
- * h_X, et verifie toutes les preuves d'inclusion Merkle.
+ * Verifica la validez de los shares recibidos 
+ * comprobando la prueba de proximidad.
+ * Los P_i comprueban el cálculo Fiat–Shamir y el grado de 
+ * h_X, y verifican todas las pruebas de inclusión Merkle.
  */
 bool verify_prox(
     const ProximityProof& proof,

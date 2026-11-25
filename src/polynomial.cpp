@@ -2,9 +2,9 @@
 #include <algorithm>
 
 /*
- * Evaluation point a point d'un polynome bivarie P(X,Y).
- * Applique la methode de Horner sur la variable X.
- * Chaque coefficient c_i(Y) est prealablement evalue en y.
+ * Evalúa punto a punto el polinomio bivariado P(X,Y).
+ * Aplica el método de Horner respecto a la variable X.
+ * Antes, evalúa cada coeficiente c_i(Y) en y.
  */
 FieldElement BivPoly::evaluate(const FieldElement& x, const FieldElement& y) const {
     FieldElement result; 
@@ -17,11 +17,11 @@ FieldElement BivPoly::evaluate(const FieldElement& x, const FieldElement& y) con
 }
 
 /*
- * Genere aleatoirement le polynome de masquage r(X,Y) de 
- * degre total <= t
- * Chaque coefficient de X^i est un polynome univarie de degre 
- * <= t-i en Y, dont les termes sont tires uniformement 
- * au hasard.
+ * Genera aleatoriamente el polinomio de máscara r(X,Y), de 
+ * grado total <= t
+ * Cada coeficiente de X^i es un polinomio univariado de grado 
+ * <= t-i en Y, cuyos términos se eligen uniformemente 
+ * al azar.
  */
 BivPoly rand_biv_poly(size_t t) {
     BivPoly P;
@@ -36,9 +36,9 @@ BivPoly rand_biv_poly(size_t t) {
 }
 
 /*
- * Generation du polynome secret phi(X,Y).
- * Tire d'abord un polynome aleatoire, puis determine 
- * son terme constant a_00 comme secret.
+ * Genera el polinomio secreto phi(X,Y).
+ * Primero genera un polinomio aleatorio y después fija 
+ * su término constante a_00 al valor del secreto.
  */
 BivPoly rand_biv_poly(size_t t, const FieldElement& a_00) {
     BivPoly P = rand_biv_poly(t);
@@ -47,11 +47,11 @@ BivPoly rand_biv_poly(size_t t, const FieldElement& a_00) {
 }
 
 /*
- * Additionne deux polynomes bivaries en effectuant
- * la somme terme a terme des sous-polynomes. 
- * Le vecteur resultat est automatiquement ajuste a la dimension 
- * maximale, avec un remplissage par le polynome nul pour combler 
- * les ecarts de degre.
+ * Suma dos polinomios bivariados, sumando
+ * término a término sus polinomios univariados. 
+ * Ajusta automáticamente el vector resultado a la dimensión 
+ * máxima y rellena con el polinomio cero para cubrir 
+ * las diferencias de grado.
  */
 BivPoly add(const BivPoly& a, const BivPoly& b) {
     BivPoly result;
@@ -67,8 +67,8 @@ BivPoly add(const BivPoly& a, const BivPoly& b) {
 }
 
 /*
- * Multiplie un polynome bivarie par un scalaire en
- * multipliant chaque coefficient de X^i par le scalaire.
+ * Multiplica un polinomio bivariado por un escalar,
+ * multiplicando por él cada coeficiente de X^i.
  */
 BivPoly scalar_mul(const BivPoly& p, const FieldElement& scalar) {
     BivPoly result;
@@ -81,7 +81,7 @@ BivPoly scalar_mul(const BivPoly& p, const FieldElement& scalar) {
 
 
 /*
- * Calcul de P(x_i, Y) par la methode de Horner.
+ * Calcula P(x_i,Y) mediante el método de Horner.
  */
 Uni_Poly eval_X(const BivPoly& P, const FieldElement& x_i) {
     Uni_Poly result; 
@@ -94,7 +94,7 @@ Uni_Poly eval_X(const BivPoly& P, const FieldElement& x_i) {
 }
 
 /*
- * Calcul de P(X, y_i) par evaluation des coefficients.
+ * Calcula P(X,y_i) evaluando sus coeficientes.
  */
 Uni_Poly eval_Y(const BivPoly& P, const FieldElement& y_i) {
     Uni_Poly result;

@@ -3,10 +3,6 @@
 #include <NTL/ZZ_pX.h>
 #include <NTL/vec_ZZ_p.h>
 #include <stdexcept>
-#include <ctime>
-
-// Compteur des fonctions de hachage defini dans merkle.cpp
-extern long long hash_count;
 
 ParticipantState init_participant(
     size_t my_index,
@@ -46,7 +42,7 @@ std::vector<EchoMessage> receive_deal(
     const size_t t = state.threshold;
     const size_t i = state.my_index;
 
-    // si la proximité est = à 0 on abandonne
+    // Si falla la prueba de proximidad, se rechaza el mensaje.
     if (!verify_prox(broadcast.pi, t, state.x_coords, broadcast.c, broadcast.c_psi_Y)) {
         return {};
     }
@@ -178,67 +174,4 @@ std::optional<GetShareResult> reconstruct(
     NTL::interpolate(resultat.r_share, xs, r_vals);
 
     return resultat;
-}
-
-BenchResult run_getshare(
-    size_t n,
-    size_t t,
-    const std::vector<FieldElement>& pts,
-    const DealResult& res
-) {
-
-    clock_t start_time = clock();
-
-    // Initialisation de l'état interne de chaque P_i après reception des shares
-    // avec hon_d = 0, V = {} et ready_count = 0
-    std::vector<ParticipantState> reseau;
-    for (size_t i = 0; i < n; ++i) {
-        reseau.push_back(init_participant(i, n, t, pts));
-    }
-
-    // Traitement du message du Dealer
-    std::vector<std::vector<EchoMessage>> echos_sub(n);
-    for (size_t exp = 0; exp < n; ++exp) {
-        echos_sub[exp] = receive_deal(reseau[exp], res.broadcast_data, res.private_data[exp]);
-    }
-
-    // Echange des Echos de P_i vers P_j
-    std::vector<bool> rdy_2send(n, false); // au début personne n'est pret
-    for (size_t exp = 0; exp < n; ++exp) {
-        size_t indice_echo = 0;
-        // P_i distribue ses Echos à tous les autres P_j
-        for (size_t j = 0; j < n; ++j) {
-            if (j == exp) continue;
-            // Si echo valide, a_i,j et b_i,j ajouté dans V
-            // Retourne true si card(V) > 2t et hon_d=1
-            bool signal_ready = receive_echo(reseau[j], echos_sub[exp][indice_echo]);
-            if (signal_ready) rdy_2send[j] = true; // Si true, P_j est pret envoie Ready
-            indice_echo++;
-        }
-    }
-
-    // Accumulation des Ready
-    for (int tour = 1; tour <= 2; ++tour) { // 2 tours pour dealer honnete et t+1 P_i honnetes
-        std::vector<bool> new_ready(n, false);
-        for (size_t exp = 0; exp < n; ++exp) {
-            if (!rdy_2send[exp]) continue; // On saute les P_i qui ne sont pas prets
-            for (size_t j = 0; j < n; ++j) {
-                // Chaque P_i pret envoie son Ready à tous les autres P_j
-                if (receive_rdy(reseau[j], exp)) new_ready[j] = true;
-            }
-        }
-        rdy_2send = new_ready; // P1 et P3 recoivent >= t+1 Ready et deviennent prets
-    }
-
-    // Reconstruction des polynomes phi(X,xi) a partir des subshares
-    for (size_t i = 0; i < n; ++i) {
-        reconstruct(reseau[i]); // P_i interpole les bons phi(xj, xi) in V
-    }
-
-    clock_t end_time = clock();
-
-    BenchResult result;
-    result.temps    = (double)(end_time - start_time) / CLOCKS_PER_SEC;
-    result.nbr_hash = hash_count;
-    return result;
 }

@@ -7,94 +7,94 @@
 #include <cstddef>
 #include "field.hpp"
 
-constexpr size_t HASH_SIZE = 32; // 32 octets = 256 bits pour SHA-256
+constexpr size_t HASH_SIZE = 32; // 32 bytes = 256 bits para SHA-256
 using Hash_type = std::array<uint8_t, HASH_SIZE>;
 using Commitment = Hash_type;
 
 /*
- * Application de hachage standard H : {0,1}^* -> {0,1}^256.
- * Prend en entree un message de taille arbitraire data et sa taille len
- * et renvoie le hash SHA-256 sur 32 octets.
+ * Función hash estándar H: {0,1}* -> {0,1}^256.
+ * Recibe el mensaje data, de longitud arbitraria, y su tamaño len
+ * y devuelve su hash SHA-256 de 32 bytes.
  */
 Hash_type hash_bytes(const uint8_t* data, size_t len);
 
 /* 
- * Hache un element de F_p en le convertissant en une chaine 
- * d'octets de taille fixe avant d'appliquer SHA-256.
+ * Aplica hash a un elemento de F_p tras convertirlo en una cadena 
+ * de bytes de tamaño fijo y aplicar SHA-256.
  */
 Hash_type hash_element(const FieldElement& x);
 
 /*
- * Fonction de concatenation de deux hashs de 32 octets 
- * chacun pour obtenir un nouveau hash.
+ * Concatena dos hashes de 32 bytes 
+ * para obtener un nuevo hash.
  */ 
 Hash_type hash_concat(const Hash_type& left, const Hash_type& right);
 
-// Structure d'un chemin dans un arbre de Merkle
+// Estructura de una ruta en un árbol Merkle
 struct MerklePath {
     std::vector<Hash_type> siblings;
-    // Comme Hash(A,B) != Hash(B,A) : 
-    std::vector<bool> directions; // true = sibling a droite, false sinon
+    // Hash(A,B) no es igual a Hash(B,A): 
+    std::vector<bool> directions; // true = el hermano está a la derecha; false = a la izquierda
 };
 
 namespace MerkleTree {
 
-    // Structure d'un arbre de Merkle complet avec sauvegarde de tous les niveaux
+    // Árbol Merkle que conserva todos sus niveles
     struct Tree {
-        // Les différents niveaux : levels[0] = feuilles, ..., levels.back() = {root}
+        // Niveles del árbol: levels[0] son las hojas y levels.back() contiene la raíz
         std::vector<std::vector<Hash_type>> levels; 
 
-        // Fonction qui renvoie la racine de l'arbre a partir des feuilles
+        // Devuelve la raíz del árbol a partir de sus hojas
         Commitment root() const; 
 
         /*
-         * Fonction qui prend en entree la position d'une feuille et 
-         * construit son chemin vers la racine.
-         * C'est la preuve cryptographique qui permet de verifier 
-         * l'appartenance de la feuille a l'arbre sans avoir a connaitre 
-         * le reste des donnees.
+         * Recibe la posición de una hoja y 
+         * construye su ruta hasta la raíz.
+         * Esta prueba criptográfica permite comprobar 
+         * que la hoja pertenece al árbol, sin conocer 
+         * el resto de los datos.
          */
         MerklePath path(size_t position) const; 
     };
 
-    /* Fonction qui prend en entrees des blocs de 32 octets (Hash_type)
-     * et construit l'arbre complet a partir de feuilles deja hachees.
+    /* Recibe bloques de 32 bytes (Hash_type)
+     * y construye el árbol completo a partir de hojas ya hasheadas.
      */ 
     Tree build(const std::vector<Hash_type>& leaves);
 
     /*
-     * Genere un arbre de Merkle a partir d'elements dans F_p
-     * Appelle hash_element() pour le hachage puis build() 
-     * pour la construction.
+     * Construye un árbol Merkle a partir de elementos de F_p
+     * Aplica hash_element() a los elementos y luego llama a build() 
+     * para construir el árbol.
      */ 
 
     Tree tree_field(const std::vector<FieldElement>& values);
 
     /* 
-     * Cree un arbre de Merkle a partir d'engagements polynomiaux.
-     * Comme Commitment = Hash_type, il suffit d'appeler build().
+     * Construye un árbol Merkle a partir de compromisos polinómicos.
+     * Como Commitment = Hash_type, basta con llamar a build().
      */
     Tree tree_commits(const std::vector<Commitment>& values);
 
-    /* Calcule la racine de l'arbre Merkle a partir 
-     * d'une liste d'elements de F_p sans enregistrer 
-     les niveaux de l'arbre complet 
+    /* Calcula la raíz del árbol Merkle a partir 
+     * de una lista de elementos de F_p, sin almacenar 
+     los niveles del árbol completo 
      */ 
     Commitment commit(const std::vector<FieldElement>& values);
 
-    /* Calcule la racine de l'arbre Merkle a partir 
-     * d'une liste de commitments sans enregistrer 
-     les niveaux de l'arbre complet 
+    /* Calcula la raíz del árbol Merkle a partir 
+     * de una lista de compromisos, sin almacenar 
+     los niveles del árbol completo 
      */ 
     Commitment commit(const std::vector<Commitment>&   values);
 
-} // fin de namespace MerkleTree
+} // fin del espacio de nombres MerkleTree
 
-/* Fonction qui verifie qu'une feuille appartient bien a
- * l'arbre en recalculant la racine a partir du chemin 
- * MerklePath fourni.
- * Renvoie true si la racine recalculee correspond a la 
- * racine donnee, false si la preuve ou la feuille est invalide
+/* Comprueba que una hoja pertenece
+ * al árbol recalculando la raíz a partir de la ruta 
+ * MerklePath proporcionada.
+ * Devuelve true si la raíz recalculada coincide con la 
+ * raíz dada; si la prueba o la hoja no son válidas, devuelve false.
  */ 
 bool verify_path(const Commitment& root, const Hash_type& leaf, const MerklePath& path);
 

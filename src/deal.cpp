@@ -7,7 +7,7 @@ FieldElement compute_alpha(
     const std::vector<Commitment>& c_r_Y,
     const Commitment& c_phi
 ) {
-    // Tag de separation de domaine de fiat_shamir_rho pour eviter les collisions.
+    // Etiqueta de separación de dominio para fiat_shamir_rho, que evita colisiones.
     static const uint8_t TAG[] = {
         'A','L','P','H','A'
     };
@@ -36,10 +36,10 @@ DealResult run_deal(
     if (n < t + 1)
         throw std::invalid_argument("erreur : n < t+1");
 
-    // phi(X,Y) genere aleatoirement avec phi(0,0) = s 
+    // Genera phi(X,Y) aleatoriamente, fijando phi(0,0) = s 
     BivPoly phi = rand_biv_poly(t, secret);
 
-    // r(X,Y) genere aleatoirement 
+    // Genera r(X,Y) aleatoriamente 
     BivPoly r = rand_biv_poly(t);
    
     std::vector<std::vector<FieldElement>> matrix_a(n, std::vector<FieldElement>(n));
@@ -52,7 +52,7 @@ DealResult run_deal(
             matrix_b[i][j] = r.evaluate(x_coords[i], x_coords[j]);
         }
 
-    // c_{r(X,x_i)} = MT.Commit({b_{j,i}}_{j}) 
+    // Compromiso Merkle de la columna b_{j,i} 
     std::vector<Commitment> c_r_X(n);
     for (size_t i = 0; i < n; ++i) {
         std::vector<FieldElement> col;
@@ -60,12 +60,12 @@ DealResult run_deal(
         c_r_X[i] = MerkleTree::commit(col);
     }
 
-    // c_{r(x_i,Y)} = MT.Commit({b_{i,j}}_{j}) 
+    // Compromiso Merkle de la fila b_{i,j} 
     std::vector<Commitment> c_r_Y(n);
     for (size_t i = 0; i < n; ++i)
         c_r_Y[i] = MerkleTree::commit(matrix_b[i]);
 
-    // c_{a(x_i,Y)} = MT.Commit({a_{i,j}}_{j})
+    // Compromiso Merkle de la fila a_{i,j}
     std::vector<MerkleTree::Tree> tree_a(n);
     std::vector<Commitment> c_a_X_Y(n);
     for (size_t i = 0; i < n; ++i) {
@@ -73,11 +73,11 @@ DealResult run_deal(
         c_a_X_Y[i] = tree_a[i].root();
     }
 
-    // c_phi = MT.Commit({c_{a(x_i,Y)}}_{i}) 
+    // c_phi es el compromiso Merkle de las raíces de las filas de a 
     MerkleTree::Tree tree_c_phi = MerkleTree::tree_commits(c_a_X_Y);
     Commitment c_phi = tree_c_phi.root();
 
-    // pi_i = chemin de la feuille c_{a(x_i,Y)} vers c_phi 
+    // pi_i es la ruta Merkle desde la hoja c_{a(x_i,Y)} hasta c_phi 
     std::vector<MerklePath> pi_paths(n);
     for (size_t i = 0; i < n; ++i)
         pi_paths[i] = tree_c_phi.path(i);
@@ -87,14 +87,14 @@ DealResult run_deal(
     // psi = phi + alpha * r 
     BivPoly psi = add(phi, scalar_mul(r, alpha));
 
-    //  Matrice d'evaluation de psi 
+    //  Matriz de evaluaciones de psi 
     std::vector<std::vector<FieldElement>> psi_mat(n, std::vector<FieldElement>(n));
     for (size_t i = 0; i < n; ++i)
         for (size_t j = 0; j < n; ++j)
             psi_mat[i][j] = psi.evaluate(x_coords[i], x_coords[j]);
 
-    // c_{psi(X,x_i)} = MT.Commit({psi(x_j,x_i)}_{j}) 
-    // Feuille j = psi_mat[j][i], colonne i de la grille psi
+    // Compromiso Merkle de la columna psi(x_j,x_i) 
+    // La hoja j es psi_mat[j][i], en la columna i de la matriz psi
     std::vector<Commitment> c_psi_X(n);
     for (size_t i = 0; i < n; ++i) {
         std::vector<FieldElement> col;
@@ -102,8 +102,8 @@ DealResult run_deal(
         c_psi_X[i] = MerkleTree::commit(col);
     }
 
-    // c_{psi(x_i,Y)} = MT.Commit({psi(x_i,x_j)}_{j}) 
-    // Arbres complets conserves  
+    // Compromiso Merkle de la fila psi(x_i,x_j) 
+    // Se conservan los árboles completos  
     std::vector<MerkleTree::Tree> row_trees_psi(n);
     std::vector<Commitment> c_psi_Y(n);
     for (size_t i = 0; i < n; ++i) {
@@ -111,13 +111,13 @@ DealResult run_deal(
         c_psi_Y[i] = row_trees_psi[i].root();
     }
 
-    // c = MT.Commit({c_{psi(X,x_i)}}_{i}) 
+    // c es el compromiso Merkle de los compromisos c_{psi(X,x_i)} 
     Commitment c = MerkleTree::commit(c_psi_X);
 
-    // pi = ProximityProof(psi, t) 
+    // pi es la prueba de proximidad de psi para el umbral t 
     ProximityProof pi = prove_prox(psi, t, x_coords, c, c_psi_Y, row_trees_psi);
 
-    // Broadcast c, pi, c_phi, {c_r_X, c_r_Y, c_psi_X, c_psi_Y}_i
+    // Difunde c, pi, c_phi y los compromisos c_r_X, c_r_Y, c_psi_X y c_psi_Y
     BroadcastMessage bcast;
     bcast.c = c;
     bcast.pi = std::move(pi);
@@ -127,7 +127,7 @@ DealResult run_deal(
     bcast.c_psi_X = std::move(c_psi_X);
     bcast.c_psi_Y = std::move(c_psi_Y);
 
-    // Envoie {a_{i,j}, b_{i,j}}_j, pi_i a chaque P_i 
+    // Envía a cada P_i sus valores {a_{i,j}, b_{i,j}}_j y la ruta pi_i 
     std::vector<PrivateMessage> privates(n);
     for (size_t i = 0; i < n; ++i) {
         privates[i].a_i = matrix_a[i];

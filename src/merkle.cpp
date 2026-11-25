@@ -9,9 +9,9 @@ long long hash_count = 0;
 
 namespace {
 
-/* Implementation interne de SHA-256 suivant la norme FIPS 180-4.
- * Suivre le lien suivant pour la specification officielle du NIST :
- * lien : https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+/* Implementación interna de SHA-256 según la norma FIPS 180-4.
+ * Consulta este enlace para ver la especificación oficial del NIST:
+ * Enlace: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
  */
 static const uint32_t SHA256_K[64] = {
     0x428a2f98u, 0x71374491u, 0xb5c0fbcfu, 0xe9b5dba5u,
@@ -33,8 +33,8 @@ static const uint32_t SHA256_K[64] = {
 };
 
 /* 
- * Vecteur d'initialisation H^(0), compose de 8 valeurs 
- * de 32 bits, utilise au tout debut du hachage.
+ * Vector de inicialización H^(0), compuesto por 8 valores 
+ * de 32 bits que se usan al inicio del hash.
  */
 static const uint32_t SHA256_IV[8] = {
     0x6a09e667u, 0xbb67ae85u, 0x3c6ef372u, 0xa54ff53au,
@@ -42,20 +42,20 @@ static const uint32_t SHA256_IV[8] = {
 };
 
 /* 
- * Fonction qui applique une rotation circulaire de n bits
- * vers la droite sur un mot de 32 bits.
+ * Aplica una rotación circular de n bits
+ * hacia la derecha sobre una palabra de 32 bits.
  */
 inline uint32_t rotr32(uint32_t x, unsigned n) {
     return (x >> n) | (x << (32u - n));
 }
 
-//Fonction de compression de SHA-256 
+//Función de compresión de SHA-256 
 void sha256_block(uint32_t state[8], const uint8_t block[64]) {
     uint32_t w[64]; // message schedule : W_0, W_1, ..., W_63
 
-    // Initialisation des 16 premiers mots W_0, ..., W_15 
+    // Inicializa las primeras 16 palabras W_0, ..., W_15 
     for (int i = 0; i < 16; ++i) { 
-        // Recomposition de 4 octets en un mot de 32 bits avec Big-Endian
+        // Combina 4 bytes en una palabra de 32 bits en orden big-endian
         w[i] = (uint32_t(block[4*i+0]) << 24) // AA000000
               | (uint32_t(block[4*i+1]) << 16) // +00BB0000
               | (uint32_t(block[4*i+2]) <<  8) // +0000CC00
@@ -63,9 +63,9 @@ void sha256_block(uint32_t state[8], const uint8_t block[64]) {
     }
 
     /* 
-     * Expansion du message pour avoir W_16, ..., W_63 grace a la
-     * formule : W_i = g1(W_{i-2}) + W_{i-7} + g0(W_{i-15}) + W_{i-16}
-     * Pour avoir en tout 64 mots pour les prochains 64 tours de compression. 
+     * Expande el mensaje para obtener W_16, ..., W_63 mediante la
+     * fórmula: W_i = g1(W_{i-2}) + W_{i-7} + g0(W_{i-15}) + W_{i-16}
+     * Así se obtienen 64 palabras para las 64 rondas de compresión. 
      */
     for (int i = 16; i < 64; ++i) {
         uint32_t g0 = rotr32(w[i-15], 7) ^ rotr32(w[i-15], 18) ^ (w[i-15] >>  3);
@@ -73,53 +73,53 @@ void sha256_block(uint32_t state[8], const uint8_t block[64]) {
         w[i] = g1 + w[i-7] + g0 + w[i-16];
     }
 
-    // Initialisation des variables de travail avec l'etat actuel
+    // Inicializa las variables de trabajo con el estado actual
     uint32_t a=state[0], b=state[1], c=state[2], d=state[3];
     uint32_t e=state[4], f=state[5], g=state[6], h=state[7];
 
     /* 
-     * Boucle de compression sur 64 tours qui melange, 
-     * additionne et xor les variables de travail aux
-     * messages w[i] et les constantes SHA256_K[i] mod 2^32.
+     * Bucle de compresión de 64 rondas que mezcla, 
+     * suma y combina mediante XOR las variables de trabajo con
+     * los mensajes w[i] y las constantes SHA256_K[i], módulo 2^32.
      */
     for (int i = 0; i < 64; ++i) {
         uint32_t s1  = rotr32(e, 6)  ^ rotr32(e, 11) ^ rotr32(e, 25);
 
         /* 
-         * Choix entre f et g selon le bit de e.
+         * Elige entre f y g según el bit de e.
          * ch = (e AND f) XOR (NOT e AND g)
-         * Si le bit de e est 1, on prend le bit de f correspondant 
-         * a l'indice du bit de e, sinon on prend le bit de g.
+         * Si el bit de e es 1, toma el bit correspondiente de f 
+         * en esa posición; de lo contrario, toma el bit de g.
          */
         uint32_t ch  = (e & f) ^ (~e & g);
         uint32_t t1  = h + s1 + ch + SHA256_K[i] + w[i];
         uint32_t s0  = rotr32(a, 2) ^ rotr32(a, 13) ^ rotr32(a, 22);
 
-        // dans le vecteur (a,b,c) on prend le bit majoritaire 
-        // 0 ou 1 entre a,b,c pour chaque position
+        // En el vector (a,b,c), toma el bit mayoritario 
+        // (0 o 1) entre a, b y c para cada posición
         uint32_t maj = (a & b) ^ (a & c) ^ (b & c);
         uint32_t t2  = s0 + maj;
 
-        //Mise a jour des variables de travail pour le tour suivant
+        //Actualiza las variables de trabajo para la ronda siguiente
         h=g; g=f; f=e; e=d+t1; d=c; c=b; b=a; a=t1+t2;
     }
 
-    // Addition de l'ancien etat avec les variables de travail apres 64 tours
+    // Suma el estado anterior a las variables de trabajo tras las 64 rondas
     state[0]+=a; state[1]+=b; state[2]+=c; state[3]+=d;
     state[4]+=e; state[5]+=f; state[6]+=g; state[7]+=h;
 }
 
-// Fonction SHA-256 complete avec padding 
+// Función SHA-256 completa, incluido el relleno 
 Hash_type sha256_raw(const uint8_t* data, size_t len) {
     hash_count++;
     uint32_t state[8];
-    // Initialisation du tableau des etats avec les valeurs de H^(0)
+    // Inicializa el arreglo de estados con los valores de H^(0)
     for (int i = 0; i < 8; ++i) state[i] = SHA256_IV[i];
 
     /* 
-     * Appel de sha256_block() sur tous les blocs d'au moins 64 octets
-     * La boucle s'arrete s'il en reste moins a lire, laissant le reste  
-     * dumessage pour l'etape du padding.
+     * Llama a sha256_block() para procesar todos los bloques de al menos 64 bytes
+     * El bucle se detiene cuando quedan menos bytes por leer y reserva ese resto  
+     * del mensaje para el paso de relleno.
      */
     size_t offset = 0;
     for (; offset + 64 <= len; offset += 64) {
@@ -127,11 +127,11 @@ Hash_type sha256_raw(const uint8_t* data, size_t len) {
     }
 
     /* 
-     * Un tableau vide "buf" de 128 octets est cree.
-     * Les octets restants "tail" sont copies depuis la 
-     * position de lecture (data + offset) vers le debut de buf.
-     * La fin du message est marquee par un bit 1 suivi de zeros 
-     * pour completer le bloc.
+     * Crea el arreglo vacío buf, de 128 bytes.
+     * Copia los bytes restantes (tail) desde 
+     * la posición de lectura (data + offset) al inicio de buf.
+     * Marca el final del mensaje con un bit 1 seguido de ceros 
+     * para completar el bloque.
      */
     uint8_t buf[128] = {}; 
     size_t tail = len - offset; 
@@ -139,21 +139,21 @@ Hash_type sha256_raw(const uint8_t* data, size_t len) {
     buf[tail] = 0x80u; 
 
     /* 
-     * Ajout de la taille totale du message original en bits.
-     * La norme exige de placer cette taille sur les 8 derniers octets.
-     * Si tail < 56, il y a assez de place dans le bloc actuel (64 octets).
-     * Sinon, le padding deborde sur un deuxieme bloc, et la taille 
-     * est ecrite a la fin de ce deuxieme bloc (128 octets au total).
+     * Añade el tamaño del mensaje original en bits.
+     * La norma exige colocar ese tamaño en los últimos 8 bytes.
+     * Si tail < 56, cabe en el bloque actual de 64 bytes.
+     * Si no, el relleno ocupa un segundo bloque y el tamaño 
+     * se escribe al final de ese segundo bloque (128 bytes en total).
      */
     uint64_t bit_len = static_cast<uint64_t>(len) * 8u;
     if (tail < 56) {
-        // Tient dans un seul bloc final de 64 octets
+        // Cabe en un único bloque final de 64 bytes
         for (int j = 0; j < 8; ++j)
             buf[63 - j] = static_cast<uint8_t>(
                 bit_len >> (8u * static_cast<unsigned>(j)));
         sha256_block(state, buf);
     } else {
-        // Necessite deux blocs finaux de 128 octets
+        // Requiere dos bloques finales (128 bytes)
         for (int j = 0; j < 8; ++j)
             buf[127 - j] = static_cast<uint8_t>(
                 bit_len >> (8u * static_cast<unsigned>(j)));
@@ -162,10 +162,10 @@ Hash_type sha256_raw(const uint8_t* data, size_t len) {
     }
 
     /* 
-     * Conversion de l'etat final en tableau d'octets "digest".
-     * Le tableau state contient 8 mots de 32 bits. 
-     * On decoupe chaque mot en 4 octets de 8 bits pour obtenir 
-     * le resultat final standardise de 32 octets donc 256 bits.
+     * Convierte el estado final en el arreglo de bytes digest.
+     * El arreglo state contiene 8 palabras de 32 bits. 
+     * Divide cada palabra en 4 bytes de 8 bits para obtener 
+     * el resultado estandarizado de 32 bytes, es decir, 256 bits.
      */
     Hash_type digest;
     for (int j = 0; j < 8; ++j) {
@@ -177,42 +177,42 @@ Hash_type sha256_raw(const uint8_t* data, size_t len) {
     return digest;
 }
 
-// Fonction qui calcule la plus petite puissance de 2 superieure ou egale a n.
+// Calcula la menor potencia de 2 que sea mayor o igual que n.
 size_t next_pow2(size_t n) {
     size_t p = 1;
-    // Left shift : p double a chaque iteration.
+    // Desplazamiento a la izquierda: p se duplica en cada iteración.
     while (p < n) p = p * 2;
     return p;
 }
 
-} // Fin du namespace anonyme
+} // Fin del espacio de nombres anónimo
 
 Hash_type hash_bytes(const uint8_t* data, size_t len) {
     return sha256_raw(data, len);
 }
 
 Hash_type hash_element(const FieldElement& x) {
-    // Conversion de l'element de F_p en ZZ
+    // Convierte el elemento de F_p a ZZ
     NTL::ZZ z = NTL::rep(x);  
 
-    // Calcul de log_2(p)/8 = nbr d'octets necessaires pour representer p
+    // Calcula log_2(p)/8, el número de bytes necesarios para representar p
     long mod_bytes = NTL::NumBytes(NTL::ZZ_p::modulus());
     if (mod_bytes <= 0) mod_bytes = 1; 
 
-    // Creation d'un tableau d'octets de taille fixe pre-rempli de 0
+    // Crea un arreglo de bytes de tamaño fijo, rellenado con ceros
     std::vector<uint8_t> buf(static_cast<size_t>(mod_bytes), 0u);
-    NTL::BytesFromZZ(buf.data(), z, mod_bytes); // Ajout de z dans buf
+    NTL::BytesFromZZ(buf.data(), z, mod_bytes); // Guarda z en buf
 
-    // Hachage final du tableau d'octets : 32 octets en sortie
+    // Aplica el hash final al arreglo de bytes; la salida tiene 32 bytes
     return hash_bytes(buf.data(), buf.size());
 }
 
 Hash_type hash_concat(const Hash_type& left, const Hash_type& right) {
     uint8_t buf[HASH_SIZE * 2]; 
-    //Concatenation de left et right dans buf avant le hachage
+    //Concatena left y right en buf antes de aplicar el hash
     std::memcpy(buf, left.data(),  HASH_SIZE);
     std::memcpy(buf + HASH_SIZE, right.data(), HASH_SIZE);
-    return hash_bytes(buf, sizeof(buf)); // hash de la concatenation
+    return hash_bytes(buf, sizeof(buf)); // hash de la concatenación
 }
 
 
@@ -221,12 +221,12 @@ Hash_type hash_concat(const Hash_type& left, const Hash_type& right) {
 namespace MerkleTree {
 
 Commitment Tree::root() const {
-    // Verifie si l'arbre et la racine sont vide
+    // Comprueba si el árbol está vacío y si existe una raíz
     if (levels.empty() || levels.back().empty()) {
         throw std::logic_error(
             "erreur : L'arbre est vide ou mal construit.");
     }
-    return levels.back()[0]; // recupere la racine
+    return levels.back()[0]; // devuelve la raíz
 }
 
 MerklePath Tree::path(size_t position) const {
@@ -239,59 +239,59 @@ MerklePath Tree::path(size_t position) const {
             "erreur : La position est hors borne.");
     }
 
-    MerklePath p; // va contenir les hashs freres lors la montee
+    MerklePath p; // contendrá los hashes hermanos durante el ascenso
     size_t idx = position;
 
     for (size_t lvl = 0; lvl + 1 < levels.size(); ++lvl) {
-        // noeud courant gauche : idx pair 
+        // Nodo actual izquierdo: índice par 
         if (idx % 2 == 0) { 
-            size_t sib = idx + 1; // right sibling (true)
+            size_t sib = idx + 1; // hermano derecho (true)
 
-            // ajoute le hash de sib a p
+            // Añade a p el hash del nodo hermano
             p.siblings.push_back(levels[lvl][sib]); 
             p.directions.push_back(true);
 
-        // noeud courant droit : idx impair 
+        // Nodo actual derecho: índice impar 
         } else {
-            // idx-1 left sibling (false)
+            // idx-1 es el hermano izquierdo (false)
             p.siblings.push_back(levels[lvl][idx - 1]);
             p.directions.push_back(false);
         }
-        idx >>= 1; // passe au niveau superieur
+        idx >>= 1; // pasa al nivel superior
     }
-    return p; // le chemin complet
+    return p; // la ruta completa
 }
 
 Tree build(const std::vector<Hash_type>& leaves) {
-    if (leaves.empty()) { // Test de verification
+    if (leaves.empty()) { // comprobación de verificación
         throw std::invalid_argument(
             "erreur : liste de feuilles vide.");
     }
 
     Tree tree;
 
-    // Padding des feuilles a la prochaine puissance de 2 avec des 0 
+    // Rellena las hojas con ceros hasta alcanzar la siguiente potencia de 2 
     size_t padded = next_pow2(leaves.size());
 
-    // stocke les feuilles + padding (les 0) dans le tableau "current"
+    // Guarda las hojas y el relleno de ceros en el arreglo current
     std::vector<Hash_type> current(padded, Hash_type{});
     for (size_t i = 0; i < leaves.size(); ++i) current[i] = leaves[i];
 
-    // Le prmeier niveau "current" = levels[0] est insere dans l'arbre
+    // Inserta en el árbol el primer nivel: current = levels[0]
     tree.levels.push_back(current);
 
-    // Construction niveau par niveau tant qu'il ya plus d'un noeud 
-    // jusqu'au dernier qui est la racine.
+    // Construye el árbol nivel por nivel mientras haya más de un nodo 
+    // hasta llegar al último nivel, que contiene la raíz.
     while (current.size() > 1) {
         std::vector<Hash_type> next;
-        // Taille niveau(n+1) = (1/2) Taille (niveaun)
+        // El tamaño del nivel n+1 es la mitad del tamaño del nivel n
         next.reserve(current.size() / 2);
 
-        // Concatenation avec hash_concat()
+        // Concatena mediante hash_concat()
         for (size_t i = 0; i < current.size(); i += 2) { 
             next.push_back(hash_concat(current[i], current[i + 1]));
         }
-        //Resultat stocke dans tree
+        //Guarda el resultado en tree
         tree.levels.push_back(next);
         current = std::move(next);
     }
@@ -321,8 +321,8 @@ Tree tree_commits(const std::vector<Commitment>& values) {
 }
 
 /* 
- * Fonctions utilitaires commit() pour extraire la racine sans stocker
- * l'arbre en entier quel que soit le type de donnees manipulees.
+ * Funciones auxiliares commit() para obtener la raíz sin guardar
+ * todo el árbol, independientemente del tipo de datos.
  */
 Commitment commit(const std::vector<FieldElement>& values) {
     return tree_field(values).root();
@@ -332,16 +332,16 @@ Commitment commit(const std::vector<Commitment>& values) {
     return tree_commits(values).root();
 }
 
-} // Fin du namespace MerkleTree
+} // Fin del espacio de nombres MerkleTree
 
 bool verify_path(const Commitment& root, const Hash_type& leaf, const MerklePath& path) {
     if (path.siblings.size() != path.directions.size()) {
-        return false; // chemin malforme
+        return false; // ruta mal formada
     }
     Hash_type current = leaf;
     for (size_t i = 0; i < path.siblings.size(); ++i) {
 
-        // Comme Hash(A || B) != Hash(B || A) :
+        // Como Hash(A || B) no es igual a Hash(B || A):
         if (path.directions[i]) {
             current = hash_concat(current, path.siblings[i]);
         } else {

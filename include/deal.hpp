@@ -9,40 +9,40 @@
 #include "proximity_proof.hpp"  
 
 /* 
- * Structure regroupant les donnees publiques diffusees 
- * dans l'ensemble du reseau.
+ * Estructura que agrupa los datos públicos difundidos 
+ * a todos los participantes de la red.
  */
 struct BroadcastMessage {
-    Commitment c; // racine de l'arbre global lie a psi
-    ProximityProof pi; // preuve NI-IOPP d'evaluation
-    Commitment c_phi; // racine de l'arbre global lie a phi
-    std::vector<Commitment> c_r_X; // engagements sur les colonnes de r
-    std::vector<Commitment> c_r_Y; // engagements sur les lignes de r
-    std::vector<Commitment> c_psi_X; // engagements sur les colonnes : psi(X, x_i)
-    std::vector<Commitment> c_psi_Y; // engagements sur les shares : psi(x_i,Y)
+    Commitment c; // raíz del árbol global asociado a psi
+    ProximityProof pi; // prueba NI-IOPP de evaluación
+    Commitment c_phi; // raíz del árbol global asociado a phi
+    std::vector<Commitment> c_r_X; // compromisos de las columnas de r
+    std::vector<Commitment> c_r_Y; // compromisos de las filas de r
+    std::vector<Commitment> c_psi_X; // compromisos de las columnas: psi(X, x_i)
+    std::vector<Commitment> c_psi_Y; // compromisos de los shares: psi(x_i, Y)
 };
 
-// Structure contenant les parts privees destinees aux P_i.
+// Estructura con las partes privadas destinadas a los P_i.
 struct PrivateMessage {
     std::vector<FieldElement> a_i; // a_{i,j} = phi(x_i, x_j)_j  
     std::vector<FieldElement> b_i; // b_{i,j} = r(x_i, x_j)_j 
-    MerklePath pi_i;  // chemin MT de la feuille c_a(x_i,Y) vers c_phi 
+    MerklePath pi_i;  // ruta Merkle desde la hoja c_a(x_i, Y) hasta c_phi 
 };
 
-// Etat interne du Dealer
+// Estado interno del Dealer
 struct DealerInternalState {
     std::vector<Commitment> c_a_X_Y; // feuilles : c_a(x_i,Y)_i
-    MerkleTree::Tree tree_c_phi; // arbre complet 
+    MerkleTree::Tree tree_c_phi; // árbol completo 
 };
 
-// structure des donnees generees par le Dealer
+// Estructura con los datos generados por el Dealer
 struct DealResult {
-    BroadcastMessage broadcast_data; // message public
-    std::vector<PrivateMessage> private_data; // tableau des shares prives de taille n
-    DealerInternalState internal_state; // tests locaux du Dealer 
+    BroadcastMessage broadcast_data; // mensaje público
+    std::vector<PrivateMessage> private_data; // vector con los shares privados, de tamaño n
+    DealerInternalState internal_state; // datos internos del Dealer 
 };
 
-// Fonction principale du Dealer
+// Función principal del Dealer
 DealResult run_deal(
     const FieldElement& secret,
     size_t n,
@@ -51,8 +51,8 @@ DealResult run_deal(
 );
 
 /* 
- * Fonction qui genere le defi non-interactif via Fiat-Shamir.
- * Combine le masque r et l'engagement sur phi pour obtenir :
+ * Genera el desafío no interactivo mediante Fiat–Shamir.
+ * Combina la máscara r y el compromiso de phi para obtener:
  * alpha = H(c_r(x1,Y) || ... || c_r(xn,Y) || c_phi)
  */
 FieldElement compute_alpha(

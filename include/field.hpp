@@ -4,27 +4,24 @@
 #include <NTL/ZZ.h>
 #include <NTL/ZZ_p.h>
 
-/* 
-* Alias pour le corps fini F_p, base sur NTL::ZZ_p qui 
-* fournit l'arithmetique modulaire, principalement les
-* operateurs +, -, *, ==, != et l'inversion 1/a.
+/*
+ * Alias del cuerpo finito F_p basado en NTL::ZZ_p, que proporciona
+ * aritmética modular y los operadores +, -, *, ==, != e inverso 1/a.
  */
 using FieldElement = NTL::ZZ_p;
 
 /*
- * Definit le module p du corps fini F_p.
- * Ce module doit etre choisi suffisamment grand selon le 
- * niveau de securite exige et le besoin d'une FFT pour 
- * les prochaines preuves de proximite.
- * Doit etre appelee une seule fois avant toute operation 
- * algebrique sur FieldElement.
+ * Configura el módulo p del cuerpo finito F_p.
+ * Debe elegirse según el nivel de seguridad requerido y la necesidad
+ * de usar una FFT en futuras pruebas de proximidad.
+ * Se debe llamar una sola vez antes de realizar operaciones
+ * algebraicas con FieldElement.
  */
 void init_field(const NTL::ZZ& prime);
 
 /* 
- * Fonction qui genere un element aleatoire 
- * uniformement dans F_p, qui doit etre configure au
- * prealable par init_field.
+ * Genera un elemento aleatorio uniforme de F_p.
+ * El campo debe haberse configurado previamente mediante init_field.
  */
 FieldElement random_element();
 
