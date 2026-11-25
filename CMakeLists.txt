@@ -9,8 +9,7 @@ find_path(NTL_INCLUDE_DIR NAMES NTL/ZZ_p.h REQUIRED)
 find_library(NTL_LIBRARY NAMES ntl NTL REQUIRED)
 find_library(GMP_LIBRARY NAMES gmp REQUIRED)
 
-add_executable(avss_demo
-    main.cpp
+set(AVSS_CORE_SOURCES
     src/field.cpp
     src/polynomial.cpp
     src/merkle.cpp
@@ -19,22 +18,32 @@ add_executable(avss_demo
     src/getshare.cpp
 )
 
-target_include_directories(avss_demo PRIVATE
+add_library(avss_core STATIC ${AVSS_CORE_SOURCES})
+
+target_include_directories(avss_core PUBLIC
     include
     ${NTL_INCLUDE_DIR}
 )
 
-target_link_libraries(avss_demo PRIVATE
+target_link_libraries(avss_core PUBLIC
     ${NTL_LIBRARY}
     ${GMP_LIBRARY}
 )
 
 if(WIN32)
-    target_link_libraries(avss_demo PRIVATE bcrypt)
+    target_link_libraries(avss_core PUBLIC bcrypt)
 endif()
 
-if(MSVC)
-    target_compile_options(avss_demo PRIVATE /W4)
-else()
-    target_compile_options(avss_demo PRIVATE -Wall -Wextra)
-endif()
+add_executable(avss_demo main.cpp)
+target_link_libraries(avss_demo PRIVATE avss_core)
+
+add_executable(dkg_demo dkg_main.cpp src/dkg.cpp)
+target_link_libraries(dkg_demo PRIVATE avss_core)
+
+foreach(target avss_core avss_demo dkg_demo)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /W4)
+    else()
+        target_compile_options(${target} PRIVATE -Wall -Wextra)
+    endif()
+endforeach()

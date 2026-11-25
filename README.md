@@ -1,6 +1,6 @@
-# AVSS mínimo: reparto verificable de un secreto
+# AVSS mínimo y prototipo DKG honesto
 
-Esta carpeta contiene el núcleo matemático y de protocolo de la implementación de la tesis. Se han dejado fuera las figuras, el ejecutable precompilado, los benchmarks y las pruebas unitarias. El programa principal ejecuta una demostración completa de `Deal` y `GetShare` y muestra valores y verificaciones intermedias.
+Esta carpeta contiene el núcleo matemático y de protocolo de la implementación de la tesis, una demo AVSS (`avss_demo`) y un prototipo DKG honesto (`dkg_demo`). Se han dejado fuera las figuras, los ejecutables precompilados, los benchmarks y las pruebas unitarias.
 
 Fuente: [Lyna27/projet-avss](https://github.com/Lyna27/projet-avss). La carpeta conserva el algoritmo de ese repositorio; `src/field.cpp` incluye únicamente una adaptación del origen de aleatoriedad para Windows.
 
@@ -10,10 +10,12 @@ Fuente: [Lyna27/projet-avss](https://github.com/Lyna27/projet-avss). La carpeta 
 2. **Deal.** Evalúa ambos polinomios en los puntos de los participantes. Forma los shares privados `aᵢⱼ=φ(xᵢ,xⱼ)` y `bᵢⱼ=r(xᵢ,xⱼ)`; construye compromisos Merkle; deriva `α` con Fiat–Shamir; forma `ψ=φ+αr`; y construye la prueba de proximidad.
 3. **GetShare.** Cada participante valida el mensaje del Dealer, intercambia subshares con pruebas Merkle mediante mensajes `Echo`, aplica los umbrales `Ready` y reconstruye por interpolación sus polinomios locales `φ(X,xᵢ)` y `r(X,xᵢ)`.
 4. **Comprobaciones de la demo.** `main.cpp` verifica la prueba, los caminos Merkle y que una interpolación de `t+1` participantes recupere el secreto de ejemplo. También imprime las filas de shares, raíces de compromiso, resultado de las verificaciones, tiempo y número de hashes.
+5. **Prototipo DKG honesto.** `dkg_main.cpp` simula que cada participante escoge un elemento aleatorio de `F_p` y actúa como dealer en una instancia independiente de `Deal/GetShare`. Después, cada participante suma las shares recibidas. Una interpolación de `t+1` shares agregadas comprueba que el resultado coincide con la suma de las contribuciones.
 
 ## Alcance y límites
 
 - Es una **simulación en un solo proceso**: `main.cpp` pasa las estructuras de mensajes directamente entre funciones. No implementa sockets, temporizadores ni una red satelital real.
+- `dkg_demo` es por ahora un prototipo con todos los participantes honestos: incluye las contribuciones de todos y no implementa aún el acuerdo de un conjunto común de dealers válidos ante fallos o mensajes maliciosos. La demo imprime las contribuciones y la suma para permitir inspeccionar el cálculo; una DKG real no revela esos valores.
 - Implementa el AVSS sobre un **escalar de un campo primo**. No implementa el KEM HQC, la clave HQC como vector de bits, ni los decodificadores Reed–Muller/Reed–Solomon de la parte de descifrado distribuido.
 - La fase `Recover` del protocolo no está implementada. La interpolación que aparece en la demo es una comprobación de reconstrucción, no el protocolo `Recover`.
 - Los valores por defecto (`p=7919`, `n=10`, `t=3`, `s=62`) son para demostración, no parámetros criptográficos de producción.
@@ -24,6 +26,8 @@ Fuente: [Lyna27/projet-avss](https://github.com/Lyna27/projet-avss). La carpeta 
 | Archivo | Función |
 |---|---|
 | `main.cpp` | Orquesta y muestra la ejecución de Deal y GetShare; hace las comprobaciones finales. |
+| `dkg_main.cpp` | Ejecuta la demo DKG honesta y muestra las contribuciones, shares individuales y shares agregadas. |
+| `include/dkg.hpp`, `src/dkg.cpp` | Orquesta una instancia AVSS por dealer, obtiene `phi_i(0,x_j)`, suma las contribuciones por participante y comprueba la reconstrucción. |
 | `include/field.hpp`, `src/field.cpp` | Tipo `FieldElement`, inicialización de `F_p` y muestreo aleatorio. En Windows usa el generador criptográfico del sistema (CNG); en macOS/Linux usa `/dev/urandom`. |
 | `include/polynomial.hpp`, `src/polynomial.cpp` | Representación, generación, evaluación, suma y multiplicación escalar de polinomios bivariados. |
 | `include/merkle.hpp`, `src/merkle.cpp` | SHA-256, árboles Merkle, compromisos, aperturas y verificación de caminos. |
@@ -53,10 +57,22 @@ cmake --build build
 ./build/avss_demo.exe
 ```
 
+Para ejecutar el prototipo DKG honesto:
+
+```sh
+./build/dkg_demo.exe
+```
+
 Se pueden pasar `n`, `t` y `p` en ese orden:
 
 ```sh
 ./build/avss_demo.exe 10 3 7919
+```
+
+El DKG acepta los mismos parámetros:
+
+```sh
+./build/dkg_demo.exe 10 3 7919
 ```
 
 En macOS/Linux, con NTL y GMP instalados, los mismos comandos CMake compilan la demo; el ejecutable suele llamarse `build/avss_demo`.
