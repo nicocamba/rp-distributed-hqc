@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include <cstddef>
-#include "field.hpp"
+#include "avss/math/field.hpp"
 
 constexpr size_t HASH_SIZE = 32; // 32 bytes = 256 bits para SHA-256
 using Hash_type = std::array<uint8_t, HASH_SIZE>;

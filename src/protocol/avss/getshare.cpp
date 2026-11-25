@@ -1,4 +1,4 @@
-#include "getshare.hpp"
+#include "avss/protocol/avss/getshare.hpp"
 #include <NTL/ZZ_p.h>
 #include <NTL/ZZ_pX.h>
 #include <NTL/vec_ZZ_p.h>

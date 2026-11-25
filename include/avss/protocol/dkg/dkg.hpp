@@ -3,7 +3,7 @@
 
 #include <cstddef>
 #include <vector>
-#include "field.hpp"
+#include "avss/math/field.hpp"
 
 /*
  * Resultado de la simulación centralizada del DKG.

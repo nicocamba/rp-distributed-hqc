@@ -4,8 +4,8 @@
 #include <sstream>
 #include <vector>
 #include <time.h>
-#include "deal.hpp"
-#include "getshare.hpp" 
+#include "avss/protocol/avss/deal.hpp"
+#include "avss/protocol/avss/getshare.hpp" 
 
 // Contador de hashes definido en merkle.cpp
 extern long long hash_count; // 64 bits

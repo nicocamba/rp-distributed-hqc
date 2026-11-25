@@ -1,4 +1,4 @@
-#include "polynomial.hpp"
+#include "avss/math/polynomial.hpp"
 #include <algorithm>
 
 /*

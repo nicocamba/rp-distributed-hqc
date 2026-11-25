@@ -1,11 +1,11 @@
-#include "dkg.hpp"
+#include "avss/protocol/dkg/dkg.hpp"
 
 #include <NTL/ZZ_pX.h>
 #include <stdexcept>
 #include <utility>
 
-#include "deal.hpp"
-#include "getshare.hpp"
+#include "avss/protocol/avss/deal.hpp"
+#include "avss/protocol/avss/getshare.hpp"
 
 namespace {
 

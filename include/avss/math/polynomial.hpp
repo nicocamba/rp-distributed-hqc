@@ -4,7 +4,7 @@
 #include <vector>
 #include <cstddef>
 #include <NTL/ZZ_pX.h>
-#include "field.hpp"
+#include "avss/math/field.hpp"
 
 /*
  * Alias para el anillo de polinomios univariados F_p[X].

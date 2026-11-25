@@ -1,4 +1,4 @@
-#include "proximity_proof.hpp"
+#include "avss/proofs/proximity_proof.hpp"
 #include <NTL/ZZ.h>
 #include <NTL/ZZ_p.h>
 #include <NTL/ZZ_pX.h>

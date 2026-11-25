@@ -5,9 +5,9 @@
 #include <optional>
 #include <cstddef>
 
-#include "polynomial.hpp"
-#include "deal.hpp"
-#include "proximity_proof.hpp" 
+#include "avss/math/polynomial.hpp"
+#include "avss/protocol/avss/deal.hpp"
+#include "avss/proofs/proximity_proof.hpp" 
 
 /* 
  * Estructura del mensaje que P_i difunde a P_j

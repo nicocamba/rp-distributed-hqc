@@ -1,7 +1,7 @@
 #ifndef PROXIMITY_PROOF_H
 #define PROXIMITY_PROOF_H
-#include "polynomial.hpp"
-#include "merkle.hpp"
+#include "avss/math/polynomial.hpp"
+#include "avss/crypto/merkle.hpp"
 #include <vector>
 #include <cstddef>
 

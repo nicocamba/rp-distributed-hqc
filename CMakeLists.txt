@@ -10,12 +10,12 @@ find_library(NTL_LIBRARY NAMES ntl NTL REQUIRED)
 find_library(GMP_LIBRARY NAMES gmp REQUIRED)
 
 set(AVSS_CORE_SOURCES
-    src/field.cpp
-    src/polynomial.cpp
-    src/merkle.cpp
-    src/proximity_proof.cpp
-    src/deal.cpp
-    src/getshare.cpp
+    src/math/field.cpp
+    src/math/polynomial.cpp
+    src/crypto/merkle.cpp
+    src/proofs/proximity_proof.cpp
+    src/protocol/avss/deal.cpp
+    src/protocol/avss/getshare.cpp
 )
 
 add_library(avss_core STATIC ${AVSS_CORE_SOURCES})
@@ -34,10 +34,10 @@ if(WIN32)
     target_link_libraries(avss_core PUBLIC bcrypt)
 endif()
 
-add_executable(avss_demo main.cpp)
+add_executable(avss_demo apps/avss_main.cpp)
 target_link_libraries(avss_demo PRIVATE avss_core)
 
-add_executable(dkg_demo dkg_main.cpp src/dkg.cpp)
+add_executable(dkg_demo apps/dkg_main.cpp src/protocol/dkg/dkg.cpp)
 target_link_libraries(dkg_demo PRIVATE avss_core)
 
 foreach(target avss_core avss_demo dkg_demo)

@@ -3,10 +3,10 @@
 
 #include <vector>
 #include <cstddef>
-#include "field.hpp"
-#include "polynomial.hpp"
-#include "merkle.hpp"
-#include "proximity_proof.hpp"  
+#include "avss/math/field.hpp"
+#include "avss/math/polynomial.hpp"
+#include "avss/crypto/merkle.hpp"
+#include "avss/proofs/proximity_proof.hpp"  
 
 /* 
  * Estructura que agrupa los datos públicos difundidos 
