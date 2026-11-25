@@ -53,7 +53,8 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Honest DKG simulation over F_" << p << "\n";
     std::cout << "Participants n = " << n << ", threshold t = " << threshold << "\n";
-    std::cout << "Each participant samples a field element and runs Deal/GetShare as a dealer.\n";
+    std::cout << "Each participant samples a field element and prepares a full AVSS Deal.\n";
+    std::cout << "All n Deal/GetShare instances are simulated together.\n";
     std::cout << "This single-process demo displays secrets for inspection; a real DKG would not reveal them.\n\n";
 
     const DKGResult result = run_dkg(n, threshold, points);

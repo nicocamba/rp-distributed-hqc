@@ -19,8 +19,9 @@ struct DKGResult {
 };
 
 /*
- * Simula un DKG honesto: cada participante muestrea un secreto de F_p,
- * lo reparte mediante una instancia de Deal/GetShare, y cada participante
+ * Simula un DKG honesto con n instancias AVSS activas: cada participante
+ * muestrea un secreto de F_p y prepara un Deal completo; después se procesan
+ * las fases Deal, Echo y Ready de todas las instancias. Cada participante
  * suma las contribuciones que recibió.
  */
 DKGResult run_dkg(
